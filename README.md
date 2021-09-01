@@ -1,2 +1,2 @@
 # TravellingSalesman
-Solves the TSP problem
+Solves the travelling salesman problem using the dynamic programming approach.
