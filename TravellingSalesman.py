@@ -1,10 +1,11 @@
 import datetime
 import json
-import re
-import time
 import matplotlib.pyplot as plt
-#import mysql.connector
 import numpy as np
+import pymongo
+import re
+import requests
+import time
 
 from itertools import permutations
 from TwitterAPI import TwitterAPI
@@ -21,6 +22,12 @@ def get_timestamp():
 def log(str):
 	print( get_timestamp() + ': ' + str )
 #######################################################
+def get_current_IP():
+	result = requests.get('https://api.ipify.org')
+	return result.text
+#######################################################
+# TSP-related functions
+#######################################################
 def convert_to_float(s):
 	try:
 		ret = float(s)
@@ -32,6 +39,25 @@ def convert_to_float(s):
 # generate string id
 def generate_id(start, locs):
 	return str(start) + ',' + str(locs)
+#######################################################
+# extract locations from a string
+# note that the first location is appended at the end (to make a loop), so the length of the list returned equals the number of locations + 1
+def extract_locations(string):
+	locs = []
+	matches = re.findall('\[.+?,.+?\]', string)
+
+	for match in matches:
+		s0, s1 = re.split(',', match[1: -1], 1)
+		x = convert_to_float(s0)
+		y = convert_to_float(s1)
+		
+		if isinstance(x, float) and isinstance(y, float):
+			locs.append( [x, y] )
+		
+	# append the first location
+	if len(locs) > 0:
+		locs.append(locs[0])
+	return locs
 #######################################################
 # generate the distance matrix
 def generate_distance_matrix(locs):
@@ -87,52 +113,15 @@ def plot_path(locs, path):
 	ax.plot( path[:, 0], path[:, 1] )
 	ax.scatter( locs_array[:, 0], locs_array[:, 1], color = 'red' )
 	plt.savefig('sol.png')
+	plt.close()
 #######################################################
-# check for new requests at regular intervals
-def watch():
-	interval = 1
-
-	log('Watch process initialised')
-
-	while (interval > 0):
-		log('Execute and wait for {}m'.format(interval))
-		update()
-
-		sleep_time = interval * 60
-		time.sleep(sleep_time)
-		
-		mysql_connection = get_mysql_connection()
-		interval_record = execute_mysql_query( mysql_connection, 'SELECT * FROM general WHERE field="watch_interval"' )
-		interval = int(interval_record[0][1])
-		mysql_connection.close()
-
-	log('Watch process terminated')
+# MongoDB functions
 #######################################################
-# MySQL functions
-#######################################################
-# get a connection to the MySQL database
-def get_mysql_connection():
-	import mysql.connector
-	with open('mysql_keys.json', 'r') as json_file:
-		mysql_keys = json.load(json_file)
-
-	mysql_connection = mysql.connector.connect( host = mysql_keys[0], user = mysql_keys[1], password = mysql_keys[2], database = mysql_keys[3] )
-	return mysql_connection
-#######################################################
-# execute a mysql query
-def execute_mysql_query(mysql_connection, mysql_query):
-	cursor = mysql_connection.cursor(buffered = True)
-	cursor.execute('SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED')
-	cursor.execute(mysql_query)
-	result = []
-
-	if 'INSERT INTO' in mysql_query or 'UPDATE' in mysql_query:
-		mysql_connection.commit()
-	elif 'SELECT * FROM' in mysql_query:
-		result = cursor.fetchall()
-	
-	cursor.close()
-	return result
+def get_client():
+	with open('mongo_keys.json', 'r') as json_file:
+		mongo_keys = json.load(json_file)
+		client = pymongo.MongoClient( username = mongo_keys[0], password = mongo_keys[1] )
+		return client
 #######################################################
 # TwitterAPI functions
 #######################################################
@@ -140,12 +129,11 @@ def execute_mysql_query(mysql_connection, mysql_query):
 def get_twitter_api():
 	with open('twitter_keys.json', 'r') as json_file:
 		twitter_keys = json.load(json_file)
-
-	api = TwitterAPI( twitter_keys[0], twitter_keys[1], twitter_keys[2], twitter_keys[3] )
-	return api
+		api = TwitterAPI( twitter_keys[0], twitter_keys[1], twitter_keys[2], twitter_keys[3] )
+		return api
 #######################################################
 # check Twitter for new requests
-def get_new_requests(api, mysql_connection):
+def get_new_requests(api, requests):
 	try:
 		result = api.request( 'search/tweets', {'q':'@SoftdevBot', 'tweet_mode':'extended'} )
 		result_json = json.loads(result.text)['statuses']
@@ -153,110 +141,171 @@ def get_new_requests(api, mysql_connection):
 		result_json = []
 	
 	new_requests = []
+
 	for j in range(len(result_json)):
-		if 'TSP' in result_json[j]['full_text']:
-			record = execute_mysql_query( mysql_connection, 'SELECT * FROM requests WHERE tweet_id="' + result_json[j]['id_str'] + '";' )
-			if len(record) == 0:
-				new_requests.append( result_json[j] )
+		if requests.count_documents( { '_id': result_json[j]['id_str'] } ) == 0:
+			new_requests.append( result_json[j] )
 
 	return new_requests
 #######################################################
 # post a reply
-def post_reply(api, message, tweet_id, image = False):
+def post_reply(api, message, tweet_id, test_mode, image = False):
 	if image:
 		f = open('sol.png', 'rb')
 		image = f.read()
 		try:
-			result = api.request('statuses/update_with_media', {'status': message, 'in_reply_to_status_id': tweet_id}, {'media[]': image})
-			status = result.status_code
+			if test_mode:
+				status = 200
+			else:
+				result = api.request('statuses/update_with_media', {'status': message, 'in_reply_to_status_id': tweet_id}, {'media[]': image})
+				status = result.status_code
 		except:
 			status = -1
 	else:
 		try:
-			result = api.request('statuses/update', {'status': message, 'in_reply_to_status_id': tweet_id})
-			status = result.status_code
+			if test_mode:
+				status = 200
+			else:
+				result = api.request('statuses/update', {'status': message, 'in_reply_to_status_id': tweet_id})
+				status = result.status_code
 		except:
 			status = -1
 
-	log('Posting a tweet, status: {}'.format(status))
+	if test_mode:
+		log('Tweet ready but not posted (test-mode)')
+	else:
+		log('Posting a tweet, status: {}'.format(status))
+
 	return status
 #######################################################
-# extract locations from a tweet
-# note that the first location is appended at the end (to make a loop), so the length of the list returned equals the number of locations + 1
-def extract_locations(tweet):
-	locs = []
-	matches = re.findall('\[.+?,.+?\]', tweet)
+# send a direct message
+def send_direct_message(api, message, test_mode):
+	user_id = 1390298589360844800
 
-	for match in matches:
-		s0, s1 = re.split(',', match[1: -1], 1)
-		x = convert_to_float(s0)
-		y = convert_to_float(s1)
-		
-		if isinstance(x, float) and isinstance(y, float):
-			locs.append( [x, y] )
-		
-	# append the first location
-	if len(locs) > 0:
-		locs.append(locs[0])
-	return locs
-#######################################################
-# process a request from Twitter
-def process_request(api, mysql_connection, tweet):
-	locs = extract_locations( tweet['full_text'] )
-	# number of distinct locations
-	n = len(locs) - 1
-	
-	name = tweet['user']['name'] + ' @' + tweet['user']['screen_name']
-	
-	# if there are no locations then just ignore the tweet
-	if n == 0:
-		a = 1
-	elif n < 4:
-		message = 'Hi ' + name + ', I have identified fewer than 4 locations in your tweet, but this makes the problem a bit trivial. Please give me something more challenging.'
-		status = post_reply(api, message, tweet['id'])
-	elif n > 12:
-		message = 'Hi ' + name + ', I have identified more than 12 locations in your tweet and I am kind of busy right now... Could you give me something slightly easier?'
-		status = post_reply(api, message, tweet['id'])
+	event = {
+		'event': {
+			'type': 'message_create',
+			'message_create': {
+				'target': {
+					'recipient_id': user_id
+				},
+				'message_data': {
+					'text': message
+				}
+			}
+		}
+	}
+
+	if not test_mode:
+		result = api.request('direct_messages/events/new', json.dumps(event))
+		ret = result.status_code
 	else:
-		message = 'Hi ' + name + ', I have identified ' + str(n) + ' locations in your tweet, this should not take too long...'
-		
-		status1 = post_reply(api, message, tweet['id'])
-		dist = generate_distance_matrix(locs)
-		start = 0
-		locs_to_visit = list(range(1, n + 1))
-		
-		t0 = time.time()
-		tour = Route(dist, start, locs_to_visit)
-		time_elapsed = time.time() - t0
-		plot_path(locs, tour.best_path)
+		ret = 200
+	
+	return ret
+#######################################################
+# General functions
+#######################################################
+# main watch function
+# if run in test_mode it will not post anything on twitter and will run 60x faster
+def watch(test_mode):
+	if test_mode:
+		time_multiplier = 1
+	else:
+		time_multiplier = 60
 
-		if time_elapsed < 0.001:
-			time_str = 'less than 0.001'
+	interval = 1
+
+	log('Watch process initialised')
+
+	while (interval > 0):
+		log('Execute and wait for {}m'.format(interval))
+		update(test_mode)
+
+		sleep_time = interval * time_multiplier
+		time.sleep(sleep_time)
+
+		client = get_client()
+		general = client['TravellingSalesman']['general']
+
+		if general.count_documents( {'_id': 'watch_interval'} ) == 1:
+			interval = int(general.find_one({ '_id': 'watch_interval'})['value'])
 		else:
-			time_str = '{:.3f}'.format(time_elapsed)
+			interval = 10
+			general.insert_one( { '_id': 'watch_interval', 'value': interval } )
 		
-		message = 'Ok ' + name + ', the length of the shortest path equals {:.3f} and it took me {} seconds to compute it. I hope this makes your life easier, consider liking this tweet :)'.format(tour.best_length, time_str)
-		status2 = post_reply(api, message, tweet['id'], True)
-		
-		if status1 == 200 and status2 == 200:
-			status = 200
+		client.close()
 
-	if status == 200:
-		query = 'INSERT INTO requests VALUES ("' + tweet['id_str'] + '", 0);'
-		execute_mysql_query( mysql_connection, query )
+	log('Watch process terminated')
 #######################################################
 # check for new requests and process them
-def update():
+def update(test_mode):
 	api = get_twitter_api()
-	mysql_connection = get_mysql_connection()
-	new_requests = get_new_requests(api, mysql_connection)
+	client = get_client()
+	requests = client['TravellingSalesman']['requests']
+	new_requests = get_new_requests(api, requests)
 	log('Number of new requests: {}'.format(len(new_requests)))
 
-	for request in new_requests:
-		process_request(api, mysql_connection, request)
-	mysql_connection.close()
-	#return new_requests
+	for tweet in new_requests:
+		process_request(api, requests, tweet, test_mode)
+	
+	client.close()
+#######################################################
+# process a request from Twitter
+def process_request(api, requests, tweet, test_mode):
+	text = tweet['full_text']
 
+	if 'TSP' in text:
+		locs = extract_locations( text )
+		# number of distinct locations
+		n = len(locs) - 1
+		
+		name = tweet['user']['name'] + ' @' + tweet['user']['screen_name']
+		
+		# if there are no locations then just ignore the tweet
+		if n == 0:
+			a = 1
+		elif n < 4:
+			message = 'Hi ' + name + ', I have identified fewer than 4 locations in your tweet, but this makes the problem a bit trivial. Please give me something more challenging.'
+			status = post_reply(api, message, tweet['id'], test_mode)
+		elif n > 12:
+			message = 'Hi ' + name + ', I have identified more than 12 locations in your tweet and I am kind of busy right now... Could you give me something slightly easier?'
+			status = post_reply(api, message, tweet['id'], test_mode)
+		else:
+			message = 'Hi ' + name + ', I have identified ' + str(n) + ' locations in your tweet, this should not take too long...'
+			
+			status1 = post_reply(api, message, tweet['id'], test_mode)
+			dist = generate_distance_matrix(locs)
+			start = 0
+			locs_to_visit = list(range(1, n + 1))
+			
+			t0 = time.time()
+			tour = Route(dist, start, locs_to_visit)
+			time_elapsed = time.time() - t0
+			plot_path(locs, tour.best_path)
+
+			if time_elapsed < 0.001:
+				time_str = 'less than 0.001'
+			else:
+				time_str = '{:.3f}'.format(time_elapsed)
+			
+			message = 'Ok ' + name + ', the length of the shortest path equals {:.3f} and it took me {} seconds to compute it. I hope this makes your life easier, consider liking this tweet :)'.format(tour.best_length, time_str)
+			status2 = post_reply(api, message, tweet['id'], test_mode, True)
+			
+			if status1 == 200 and status2 == 200:
+				status = 200
+
+		if status == 200:
+			requests.insert_one( { '_id': tweet['id_str'], 'request_type': 'TSP' } )
+
+	elif 'NeedIP' in text:
+		message = 'Hello, my current IP is: {}. Have a great day!'.format(get_current_IP())
+		status = send_direct_message(api, message, test_mode)
+
+		if status == 200:
+			requests.insert_one( { '_id': tweet['id_str'], 'request_type': 'IP' } )
+	else:
+		requests.insert_one( { '_id': tweet['id_str'], 'request_type': 'none' } )
 #######################################################
 # define a route class
 class Route:
@@ -332,4 +381,5 @@ class Route:
 			print('Best length: {}'.format(self.best_length))
 			print('Best path: {}'.format(self.best_path))
 
-#watch()
+test_mode = True
+watch(test_mode)
