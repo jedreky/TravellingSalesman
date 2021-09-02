@@ -11,41 +11,55 @@ from itertools import permutations
 from TwitterAPI import TwitterAPI
 
 #######################################################
-# Simple functions
+# Short functions
 #######################################################
-# get current timestamp
 def get_timestamp():
+	"""
+	Returns the current timestamp
+	"""
 	timestamp = datetime.datetime.now()
 	return timestamp.strftime('%H:%M:%S, %d.%m.%Y')
-#######################################################
-# print a timestamped message
+
 def log(str):
+	"""
+	Prints a timestamped message
+	"""
 	print( get_timestamp() + ': ' + str )
-#######################################################
+
 def get_current_IP():
+	"""
+	Returns the current public IP address
+	"""
 	result = requests.get('https://api.ipify.org')
 	return result.text
 #######################################################
 # TSP-related functions
 #######################################################
 def convert_to_float(s):
+	"""
+	Converts a string to float
+	"""
 	try:
 		ret = float(s)
 	except ValueError:
 		ret = False
 
 	return ret
-#######################################################
-# generate string id
+
 def generate_id(start, locs):
+	"""
+	Generates string id of a path
+	"""
 	return str(start) + ',' + str(locs)
-#######################################################
-# extract locations from a string
-# note that the first location is appended at the end (to make a loop), so the length of the list returned equals the number of locations + 1
+
 def extract_locations(string):
+	"""
+	Extracts locations from a string
+	"""
 	locs = []
 	matches = re.findall('\[.+?,.+?\]', string)
 
+	# iterate over the matches and see if they correspond to valid locations
 	for match in matches:
 		s0, s1 = re.split(',', match[1: -1], 1)
 		x = convert_to_float(s0)
@@ -53,71 +67,90 @@ def extract_locations(string):
 		
 		if isinstance(x, float) and isinstance(y, float):
 			locs.append( [x, y] )
-		
-	# append the first location
-	if len(locs) > 0:
-		locs.append(locs[0])
+
 	return locs
-#######################################################
-# generate the distance matrix
+
 def generate_distance_matrix(locs):
+	"""
+	Given location coordinates generates the distance matrix
+	"""
 	n = len(locs)
 	distance_matrix = np.zeros( [n, n] )
 	
+	# iterate over the entries of the matrix
 	for j in range(n):
 		for k in range(j + 1, n):
 			v = np.array( locs[j] ) - np.array( locs[k] )
 			distance_matrix[j, k] = np.sqrt( np.dot(v, v) )
-	
+
+	# fill up the other half of the matrix
 	distance_matrix = distance_matrix + np.transpose(distance_matrix)
 	return distance_matrix
-#######################################################
-# compute the length of a fixed path
+
 def compute_length(dist, path):
-	length = dist[ 0, path[0] ]
-	
+	"""
+	Computes the length of a given path
+	"""
+	length = 0
+
 	for j in range(len(path) - 1):
 		length += dist[path[j], path[j + 1]]
 
-	length += dist[ path[-1], n ]
-
 	return length
 
-def brute_force(dist, locs_to_visit):
+def brute_force(dist, start, end, locs_to_visit):
+	"""
+	Finds the shortest path from start to end while visiting locs_to_visit
+	using the brute-force approach
+	"""
 	perms = permutations( locs_to_visit )
-	best_length = 1000
+	best_length = None
 	
+	# iterate over all permutations
 	for perm in perms:
-		length = compute_length(dist, perm)
-		if length < best_length:
+		path = [ start ] + list(perm) + [ end ]
+		length = compute_length(dist, path)
+		
+		# if better that the current best solution, update
+		if best_length == None or length < best_length:
 			best_length = length
-			best_perm = perm
-	
-	best_path = [0] + list(best_perm) + [n]
+			best_path = path
+
 	return best_length, best_path
-#######################################################
-# generate a set of random locations in 2D centered around a specific point
+
 def generate_random_locs(n, center = [0, 0], duplicate_first_location = True):
+	"""
+	Generates a set of random locations in 2D centered around a specific point
+	"""
 	rng = np.random.default_rng()
 	locs = [ [rng.standard_normal() + center[0], rng.standard_normal() + center[1]] for j in range(n) ]
-	if duplicate_first_location:
-		locs.append( locs[0] )
+
+	# duplicate the first location if required
+#	if len(locs) > 0 and duplicate_first_location:
+#		locs.append( locs[0] )
 	return locs
-#######################################################
-# plot a path
+
 def plot_path(locs, path):
+	"""
+	Plots a path through locations
+	to make a closed loop the length of the path should be longer by 1 than the number of locations
+	"""
 	path = np.array( [ locs[j] for j in path ] )
 	locs_array = np.array(locs)
 	fig = plt.figure( figsize = (16, 8) )
 	ax = plt.axes()
 	ax.plot( path[:, 0], path[:, 1] )
 	ax.scatter( locs_array[:, 0], locs_array[:, 1], color = 'red' )
+	# TODO: it would be more elegant if we didn't have to save it to file
 	plt.savefig('sol.png')
 	plt.close()
 #######################################################
 # MongoDB functions
 #######################################################
 def get_client():
+	"""
+	Returns a MongoClient
+	"""
 	with open('mongo_keys.json', 'r') as json_file:
 		mongo_keys = json.load(json_file)
 		client = pymongo.MongoClient( username = mongo_keys[0], password = mongo_keys[1] )
@@ -127,13 +160,20 @@ def get_client():
 #######################################################
 # get a TwitterAPI object
 def get_twitter_api():
+	"""
+	Returns TwitterAPI object
+	"""
 	with open('twitter_keys.json', 'r') as json_file:
 		twitter_keys = json.load(json_file)
 		api = TwitterAPI( twitter_keys[0], twitter_keys[1], twitter_keys[2], twitter_keys[3] )
 		return api
-#######################################################
-# check Twitter for new requests
+
 def get_new_requests(api, requests):
+	"""
+	Checks Twitter for new requests
+	"""
+	
+	# find recent tweets mentioning @SoftdevBot
 	try:
 		result = api.request( 'search/tweets', {'q':'@SoftdevBot', 'tweet_mode':'extended'} )
 		result_json = json.loads(result.text)['statuses']
@@ -142,44 +182,42 @@ def get_new_requests(api, requests):
 	
 	new_requests = []
 
+	# check which of them have not been processed yet
 	for j in range(len(result_json)):
 		if requests.count_documents( { '_id': result_json[j]['id_str'] } ) == 0:
 			new_requests.append( result_json[j] )
 
 	return new_requests
-#######################################################
-# post a reply
+
 def post_reply(api, message, tweet_id, test_mode, image = False):
-	if image:
-		f = open('sol.png', 'rb')
-		image = f.read()
-		try:
-			if test_mode:
-				status = 200
-			else:
-				result = api.request('statuses/update_with_media', {'status': message, 'in_reply_to_status_id': tweet_id}, {'media[]': image})
-				status = result.status_code
-		except:
-			status = -1
+	"""
+	Posts a reply to a specific request
+	"""
+	if test_mode:
+		status = 200
+		log('The following tweet generated, but not posted (running in test-mode):')
+		print(message)
 	else:
 		try:
-			if test_mode:
-				status = 200
+			if image:
+				f = open('sol.png', 'rb')
+				image = f.read()
+				result = api.request('statuses/update_with_media', {'status': message, 'in_reply_to_status_id': tweet_id}, {'media[]': image})
+				status = result.status_code
 			else:
 				result = api.request('statuses/update', {'status': message, 'in_reply_to_status_id': tweet_id})
 				status = result.status_code
+			
+			log('Posting a tweet, status: {}'.format(status))
 		except:
 			status = -1
 
-	if test_mode:
-		log('Tweet ready but not posted (test-mode)')
-	else:
-		log('Posting a tweet, status: {}'.format(status))
-
 	return status
-#######################################################
-# send a direct message
+
 def send_direct_message(api, message, test_mode):
+	"""
+	Sends a direct message to myself
+	"""
 	user_id = 1390298589360844800
 
 	event = {
@@ -196,19 +234,24 @@ def send_direct_message(api, message, test_mode):
 		}
 	}
 
-	if not test_mode:
-		result = api.request('direct_messages/events/new', json.dumps(event))
-		ret = result.status_code
+	if test_mode:
+		status = 200
+		log('The following direct message generated, but not posted (running in test-mode):')
+		print(message)
 	else:
-		ret = 200
+		result = api.request('direct_messages/events/new', json.dumps(event))
+		status = result.status_code
+		log('Posting a direct message, status: {}'.format(status))
 	
-	return ret
+	return status
 #######################################################
 # General functions
 #######################################################
-# main watch function
-# if run in test_mode it will not post anything on twitter and will run 60x faster
 def watch(test_mode):
+	"""
+	This is the main watch function which checks for updates at regular intervals
+	if run in test_mode it will not post anything on twitter and will run 60x faster
+	"""
 	if test_mode:
 		time_multiplier = 1
 	else:
@@ -228,6 +271,7 @@ def watch(test_mode):
 		client = get_client()
 		general = client['TravellingSalesman']['general']
 
+		# read the watch_interval from the database, if not specified set to 10
 		if general.count_documents( {'_id': 'watch_interval'} ) == 1:
 			interval = int(general.find_one({ '_id': 'watch_interval'})['value'])
 		else:
@@ -237,50 +281,64 @@ def watch(test_mode):
 		client.close()
 
 	log('Watch process terminated')
-#######################################################
-# check for new requests and process them
+
 def update(test_mode):
+	"""
+	Checks for new Twitter requests and processes them
+	"""
 	api = get_twitter_api()
 	client = get_client()
 	requests = client['TravellingSalesman']['requests']
+	# get a list of unprocessed requests
 	new_requests = get_new_requests(api, requests)
 	log('Number of new requests: {}'.format(len(new_requests)))
 
+	# iterate over requests to process them
 	for tweet in new_requests:
 		process_request(api, requests, tweet, test_mode)
 	
 	client.close()
-#######################################################
-# process a request from Twitter
-def process_request(api, requests, tweet, test_mode):
-	text = tweet['full_text']
 
+def process_request(api, requests, tweet, test_mode):
+	"""
+	Processes a single Twitter request
+	"""
+	try:
+		text = tweet['full_text']
+	except:
+		text = ''
+
+	# check if TSP request
 	if 'TSP' in text:
 		locs = extract_locations( text )
 		# number of distinct locations
-		n = len(locs) - 1
-		
+		n = len(locs)
+
 		name = tweet['user']['name'] + ' @' + tweet['user']['screen_name']
 		
-		# if there are no locations then just ignore the tweet
+		n_max = 12
+
+		# check the number of locations mentioned in the tweet
 		if n == 0:
-			a = 1
-		elif n < 4:
-			message = 'Hi ' + name + ', I have identified fewer than 4 locations in your tweet, but this makes the problem a bit trivial. Please give me something more challenging.'
+			message = 'Hi {}, I have failed to find any locations in your tweet. Please try again.'.format(name)
 			status = post_reply(api, message, tweet['id'], test_mode)
-		elif n > 12:
-			message = 'Hi ' + name + ', I have identified more than 12 locations in your tweet and I am kind of busy right now... Could you give me something slightly easier?'
+		elif n < 4:
+			message = 'Hi {}, I have identified fewer than 4 locations in your tweet, but this makes the problem a bit trivial. Please give me something more challenging.'.format(name)
+			status = post_reply(api, message, tweet['id'], test_mode)
+		elif n > n_max:
+			message = 'Hi {}, I have identified more than ' + str(n_max) + ' locations in your tweet and I am kind of busy right now... Could you give me something slightly easier?'.format(name)
 			status = post_reply(api, message, tweet['id'], test_mode)
 		else:
-			message = 'Hi ' + name + ', I have identified ' + str(n) + ' locations in your tweet, this should not take too long...'
-			
+			message = 'Hi {}, I have identified {} locations in your tweet, this should not take too long...'.format(name, str(n))
 			status1 = post_reply(api, message, tweet['id'], test_mode)
-			dist = generate_distance_matrix(locs)
-			start = 0
-			locs_to_visit = list(range(1, n + 1))
 			
+			# generate the distance matrix and locations to visit
+			dist = generate_distance_matrix(locs)
+			locs_to_visit = list(range(1, n))
+			
+			# solve the TSP and measure the time elapsed
 			t0 = time.time()
-			tour = Route(dist, start, locs_to_visit)
+			tour = Route(dist, 0, 0, locs_to_visit)
 			time_elapsed = time.time() - t0
 			plot_path(locs, tour.best_path)
 
@@ -289,35 +347,43 @@ def process_request(api, requests, tweet, test_mode):
 			else:
 				time_str = '{:.3f}'.format(time_elapsed)
 			
-			message = 'Ok ' + name + ', the length of the shortest path equals {:.3f} and it took me {} seconds to compute it. I hope this makes your life easier, consider liking this tweet :)'.format(tour.best_length, time_str)
+			message = 'Ok {}, the length of the shortest path equals {:.3f} and it took me {} seconds to compute it. I hope this makes your life easier, consider liking this tweet :)'.format(name, tour.best_length, time_str)
 			status2 = post_reply(api, message, tweet['id'], test_mode, True)
 			
+			# check if both messages have been posted successfully
 			if status1 == 200 and status2 == 200:
 				status = 200
 
+		# save the request as processed in the database
 		if status == 200:
 			requests.insert_one( { '_id': tweet['id_str'], 'request_type': 'TSP' } )
 
+	# check if NeedIP request
 	elif 'NeedIP' in text:
 		message = 'Hello, my current IP is: {}. Have a great day!'.format(get_current_IP())
 		status = send_direct_message(api, message, test_mode)
 
+		# save the request as processed in the database
 		if status == 200:
 			requests.insert_one( { '_id': tweet['id_str'], 'request_type': 'IP' } )
+	# if a request of unknown type, then ignore
 	else:
 		requests.insert_one( { '_id': tweet['id_str'], 'request_type': 'none' } )
 #######################################################
-# define a route class
+# Class definition
+#######################################################
+# TODO: check the following class
 class Route:
 	# standard constructor
-	def __init__(self, dist, start, locs, routes = None):
-		n = len(dist) - 1
+	# takes: distance matrix, start and end points, locations to be visited and a dictionary to be filled
+	def __init__(self, dist, start, end, locs_to_visit, routes = None):
 		# initialise variables
 		self.start = start
-		self.locs = locs
+		self.end = end
+		self.locs_to_visit = locs_to_visit
 		self.parents = []
 		self.children = []
-		self.id = generate_id(start, locs)
+		self.id = generate_id(start, locs_to_visit)
 		
 		# if no dictionary passed, create one
 		if routes == None:
@@ -327,7 +393,7 @@ class Route:
 		routes[self.id] = self
 
 		# if the route is non-trivial, generate child routes
-		if len(locs) >= 2:
+		if len(locs_to_visit) >= 2:
 			self.status = 0
 		# 0 - untouched
 		# 1 - computation in progress
@@ -336,18 +402,18 @@ class Route:
 			self.path_exists = False
 			
 			# iterate over the next location
-			for j in locs:
+			for j in locs_to_visit:
 				# set parameters of the child route
 				child_start = j
-				child_locs = locs.copy()
-				child_locs.remove(j)
-				child_route_id = generate_id(child_start, child_locs)
+				child_locs_to_visit = locs_to_visit.copy()
+				child_locs_to_visit.remove(j)
+				child_route_id = generate_id(child_start, child_locs_to_visit)
 				
 				# if such a route exists, link it, if not create it
 				if child_route_id in routes.keys():
 					child_route = routes[ child_route_id ]
 				else:
-					child_route = Route(dist, child_start, child_locs, routes)
+					child_route = Route(dist, child_start, self.end, child_locs_to_visit, routes)
 				
 				# add parent/child relations
 				child_route.add_parent(self)
@@ -361,10 +427,10 @@ class Route:
 						self.best_length = new_length
 						self.best_path = [self.start] + child_route.best_path
 						self.path_exists = True
-			
-		elif len(locs) == 1:
-			self.best_length = dist[self.start, locs[0]] + dist[locs[0], n ]
-			self.best_path = [self.start] + locs  + [ n ]
+
+		elif len(locs_to_visit) == 1:
+			self.best_length = dist[self.start, locs_to_visit[0]] + dist[locs_to_visit[0], self.end ]
+			self.best_path = [ self.start ] + locs_to_visit  + [ self.end ]
 			self.status = 3
 			self.path_exists = True
 	
@@ -375,7 +441,7 @@ class Route:
 		self.children.append(child)
 
 	def print_route(self):
-		print('\nStart: {}, Locs: {}, Status: {}'.format(self.start, self.locs, self.status))
+		print('\nStart: {}, Locs: {}, End: {}, Status: {}'.format(self.start, self.locs_to_visit, self.end, self.status))
 
 		if self.path_exists:
 			print('Best length: {}'.format(self.best_length))
