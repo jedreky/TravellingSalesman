@@ -1,4 +1,9 @@
+"""
+This file contains all the functions and classes used by the TSP bot.
+"""
+
 import datetime
+import io
 import json
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,6 +15,12 @@ import time
 from itertools import permutations
 from TwitterAPI import TwitterAPI
 
+#######################################################
+# Global variables
+#######################################################
+# minimal and maximal number of locations
+n_min = 4
+n_max = 12
 #######################################################
 # Short functions
 #######################################################
@@ -118,32 +129,24 @@ def brute_force(dist, start, end, locs_to_visit):
 
 	return best_length, best_path
 
-def generate_random_locs(n, center = [0, 0], duplicate_first_location = True):
-	"""
-	Generates a set of random locations in 2D centered around a specific point
-	"""
-	rng = np.random.default_rng()
-	locs = [ [rng.standard_normal() + center[0], rng.standard_normal() + center[1]] for j in range(n) ]
-
-	# duplicate the first location if required
-#	if len(locs) > 0 and duplicate_first_location:
-#		locs.append( locs[0] )
-	return locs
-
 def plot_path(locs, path):
 	"""
 	Plots a path through locations
 	to make a closed loop the length of the path should be longer by 1 than the number of locations
 	"""
+	# convert the path and the locations into numpy arrays
 	path = np.array( [ locs[j] for j in path ] )
 	locs_array = np.array(locs)
-	fig = plt.figure( figsize = (16, 8) )
-	ax = plt.axes()
-	ax.plot( path[:, 0], path[:, 1] )
+	# create a new figure
+	fig, ax = plt.subplots( figsize = (16, 8) )
+	# plot the path and the locations
+	ax.plot( path[:, 0], path[:, 1])
 	ax.scatter( locs_array[:, 0], locs_array[:, 1], color = 'red' )
-	# TODO: it would be more elegant if we didn't have to save it to file
-	plt.savefig('sol.png')
-	plt.close()
+	# save the plot to a binary stream
+	img = io.BytesIO()
+	fig.savefig( img, format = 'png' )
+	plt.close(fig)
+	return img
 #######################################################
 # MongoDB functions
 #######################################################
@@ -189,7 +192,7 @@ def get_new_requests(api, requests):
 
 	return new_requests
 
-def post_reply(api, message, tweet_id, test_mode, image = False):
+def post_reply(api, message, tweet_id, test_mode, img = None):
 	"""
 	Posts a reply to a specific request
 	"""
@@ -199,10 +202,8 @@ def post_reply(api, message, tweet_id, test_mode, image = False):
 		print(message)
 	else:
 		try:
-			if image:
-				f = open('sol.png', 'rb')
-				image = f.read()
-				result = api.request('statuses/update_with_media', {'status': message, 'in_reply_to_status_id': tweet_id}, {'media[]': image})
+			if img is not None:
+				result = api.request('statuses/update_with_media', { 'status': message, 'in_reply_to_status_id': tweet_id }, { 'media[]': img.getvalue() })
 				status = result.status_code
 			else:
 				result = api.request('statuses/update', {'status': message, 'in_reply_to_status_id': tweet_id})
@@ -315,14 +316,12 @@ def process_request(api, requests, tweet, test_mode):
 		n = len(locs)
 
 		name = tweet['user']['name'] + ' @' + tweet['user']['screen_name']
-		
-		n_max = 12
 
 		# check the number of locations mentioned in the tweet
 		if n == 0:
 			message = 'Hi {}, I have failed to find any locations in your tweet. Please try again.'.format(name)
 			status = post_reply(api, message, tweet['id'], test_mode)
-		elif n < 4:
+		elif n < n_min:
 			message = 'Hi {}, I have identified fewer than 4 locations in your tweet, but this makes the problem a bit trivial. Please give me something more challenging.'.format(name)
 			status = post_reply(api, message, tweet['id'], test_mode)
 		elif n > n_max:
@@ -340,7 +339,7 @@ def process_request(api, requests, tweet, test_mode):
 			t0 = time.time()
 			tour = Route(dist, 0, 0, locs_to_visit)
 			time_elapsed = time.time() - t0
-			plot_path(locs, tour.best_path)
+			img = plot_path(locs, tour.best_path)
 
 			if time_elapsed < 0.001:
 				time_str = 'less than 0.001'
@@ -348,7 +347,8 @@ def process_request(api, requests, tweet, test_mode):
 				time_str = '{:.3f}'.format(time_elapsed)
 			
 			message = 'Ok {}, the length of the shortest path equals {:.3f} and it took me {} seconds to compute it. I hope this makes your life easier, consider liking this tweet :)'.format(name, tour.best_length, time_str)
-			status2 = post_reply(api, message, tweet['id'], test_mode, True)
+			status2 = post_reply(api, message, tweet['id'], test_mode, img)
+			img.close()
 			
 			# check if both messages have been posted successfully
 			if status1 == 200 and status2 == 200:
@@ -447,5 +447,5 @@ class Route:
 			print('Best length: {}'.format(self.best_length))
 			print('Best path: {}'.format(self.best_path))
 
-test_mode = True
-watch(test_mode)
+#test_mode = True
+#watch(test_mode)
