@@ -333,6 +333,7 @@ def process_request(api, requests, tweet, test_mode):
 
 	# check if TSP request
 	if 'TSP' in text:
+		log('Request {} identified as TSP.'.format(tweet['id_str']))
 		locs = extract_locations( text )
 		# number of identified locations
 		n = len(locs)
@@ -381,6 +382,7 @@ def process_request(api, requests, tweet, test_mode):
 
 	# check if NeedIP request
 	elif 'NeedIP' in text:
+		log('Request {} identified as NeedIP.'.format(tweet['id_str']))
 		message = 'Hello, my current IP is: {}. Have a great day!'.format( get_current_IP() )
 		status = send_direct_message(api, message, test_mode)
 
@@ -389,6 +391,7 @@ def process_request(api, requests, tweet, test_mode):
 			requests.insert_one( { '_id': tweet['id_str'], 'request_type': 'IP' } )
 	# if a request of unknown type, then ignore and mark as processed
 	else:
+		log('Request {} of unknown type, will be ignored.'.format(tweet['id_str']))
 		requests.insert_one( { '_id': tweet['id_str'], 'request_type': 'none' } )
 #######################################################
 # Class definition
@@ -468,5 +471,5 @@ class Route:
 			print('Best path: {}'.format(self.best_path))
 
 if __name__ == "__main__":
-	test_mode = False
+	test_mode = True
 	watch(test_mode)
