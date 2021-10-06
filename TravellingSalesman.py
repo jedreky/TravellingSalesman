@@ -471,5 +471,5 @@ class Route:
 			print('Best path: {}'.format(self.best_path))
 
 if __name__ == "__main__":
-	test_mode = True
+	test_mode = False
 	watch(test_mode)
