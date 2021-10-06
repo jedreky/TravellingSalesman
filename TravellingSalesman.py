@@ -168,7 +168,7 @@ def get_client():
 	"""
 	with open('mongo_keys.json', 'r') as json_file:
 		mongo_keys = json.load(json_file)
-		client = pymongo.MongoClient( username = mongo_keys[0], password = mongo_keys[1] )
+		client = pymongo.MongoClient( username = mongo_keys['user'], password = mongo_keys['password'] )
 		return client
 #######################################################
 # TwitterAPI functions
@@ -180,7 +180,7 @@ def get_twitter_api():
 	"""
 	with open('twitter_keys.json', 'r') as json_file:
 		twitter_keys = json.load(json_file)
-		api = TwitterAPI.TwitterAPI( twitter_keys[0], twitter_keys[1], twitter_keys[2], twitter_keys[3] )
+		api = TwitterAPI.TwitterAPI( twitter_keys['consumer_key'], twitter_keys['consumer_secret'], twitter_keys['access_token_key'], twitter_keys['access_token_secret'] )
 		return api
 
 def get_new_requests(api, requests):
