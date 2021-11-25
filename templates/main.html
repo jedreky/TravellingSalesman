@@ -1,0 +1,37 @@
+<html>
+
+<head>
+<style>
+	#canvas-container
+	{
+		margin-top: 100px;
+		text-align:center ;
+	}
+
+	#click-area
+	{
+		border: 2px solid black;
+		cursor: pointer;
+		background-image: url('{{ url_for( 'static', filename = img_file ) }}');
+		background-repeat: no-repeat;
+		background-size: contain;
+	}
+</style>
+</head>
+
+<body>
+	<div id = "canvas-container">
+		<canvas id = 'click-area' width = '{{img_size[0]}}' height = '{{img_size[1]}}'></canvas>
+	</div>
+	<p id = 'info' align = 'center'>
+	{% if message %}
+	{{message}}
+	{% endif %}
+	</p>
+	<form action = '/' method = 'post' align = 'center'>
+	<input type = 'hidden' name = 'points' id = 'points'>
+	<input type = 'submit' value = "Go, solve, Mandango!">
+	</form>
+	<script src = '{{ url_for( 'static', filename = 'readPos.js' ) }}'></script>
+</body>
+</html>
