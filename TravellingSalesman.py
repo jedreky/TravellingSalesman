@@ -22,6 +22,8 @@ n_min = 4
 n_max = 12
 # id of my personal Twitter account
 user_id = '1390298589360844800'
+# dpi value used for saving images
+dpi = 100
 #######################################################
 # Short functions
 #######################################################
@@ -44,6 +46,17 @@ def get_current_IP():
 	"""
 	result = requests.get('https://api.ipify.org')
 	return result.text
+
+def get_time_string(time_elapsed):
+	"""
+	Returns a human-readable string containing the computation time.
+	"""
+	if time_elapsed < 0.001:
+		time_str = 'less than 0.001'
+	else:
+		time_str = '{:.3f}'.format(time_elapsed)
+
+	return time_str		
 #######################################################
 # TSP-related functions
 #######################################################
@@ -141,7 +154,7 @@ def brute_force(dist, start, end, locs_to_visit):
 
 	return best_length, best_path
 
-def plot_path(locs, path):
+def plot_path(locs, path, for_Twitter = True, img_info = None):
 	"""
 	Plots a path through locations (to make a closed loop the first and last
 	locations should be the same).
@@ -149,15 +162,28 @@ def plot_path(locs, path):
 	# convert the path and the locations into numpy arrays
 	path = np.array( [ locs[j] for j in path ] )
 	locs_array = np.array(locs)
-	# create a new figure
-	fig, ax = plt.subplots( figsize = (16, 8) )
-	# plot the path and the locations
-	ax.plot( path[:, 0], path[:, 1])
-	ax.scatter( locs_array[:, 0], locs_array[:, 1], color = 'red' )
-	# save the plot to a binary stream
-	img = io.BytesIO()
-	fig.savefig( img, format = 'png' )
-	plt.close(fig)
+	if for_Twitter:
+		# create a new figure
+		fig, ax = plt.subplots( figsize = (16, 8) )
+		# plot the path and the locations
+		ax.plot( path[:, 0], path[:, 1])
+		ax.scatter( locs_array[:, 0], locs_array[:, 1], color = 'red' )
+		# save the plot to a binary stream
+		img = io.BytesIO()
+		fig.savefig( img, format = 'png', dpi = dpi )
+		plt.close(fig)
+	else:
+		fig, ax = plt.subplots( figsize = ( img_info['width']/dpi, img_info['height']/dpi ), tight_layout = {'pad': 0} )
+		ax.axis('off')
+		background = plt.imread('static/' + img_info['file'])
+		back_img = ax.imshow(background)
+		ax.plot( path[:, 0], path[:, 1])
+		ax.scatter( locs_array[:, 0], locs_array[:, 1], color = 'red' )
+
+		img = io.BytesIO()
+		fig.savefig( img, format = 'png', dpi = dpi )
+		plt.close(fig)
+
 	return img
 #######################################################
 # MongoDB functions
@@ -360,13 +386,8 @@ def process_request(api, requests, tweet, test_mode):
 			# solve the TSP and measure the time elapsed
 			t0 = time.time()
 			tour = Route(dist, 0, 0, locs_to_visit)
-			time_elapsed = time.time() - t0
+			time_str = get_time_string( time.time() - t0 )
 			img = plot_path(locs, tour.best_path)
-
-			if time_elapsed < 0.001:
-				time_str = 'less than 0.001'
-			else:
-				time_str = '{:.3f}'.format(time_elapsed)
 			
 			message = 'Ok {}, the length of the shortest path equals {:.3f} and it took me {} seconds to compute it. I hope this makes your life easier, consider liking this tweet :)'.format(name, tour.best_length, time_str)
 			status2 = post_reply(api, message, tweet['id'], test_mode, img)
