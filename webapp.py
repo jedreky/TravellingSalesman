@@ -25,15 +25,13 @@ def generate_random_string(length):
 
 app = Flask(__name__)
 
-env = None
-
 @app.route( '/', methods=['GET', 'POST'] )
-def index():
+def main():
 	img = PIL.Image.open('static/' + background_file)
 	img_size = img.size
 
 	if request.method == 'GET':
-		return render_template('index.html', img_file = background_file, img_size = img_size)
+		return render_template('main.html', img_file = background_file, img_size = img_size)
 	elif request.method == 'POST':
 		locs = TS.extract_locations( request.form['points'] )
 		n = len(locs)
@@ -54,16 +52,16 @@ def index():
 			img_info = { 'file': background_file, 'width': img.size[0], 'height': img.size[1] }
 			img = TS.plot_path(locs, tour.best_path, False, img_info)
 
-			img_file = generate_random_string(16) + '.jpg'
+			img_file = 't-' + generate_random_string(12) + '.jpg'
 
 			with open('static/' + img_file, 'wb') as f:
 				f.write(img.getbuffer())
 
 			message += 'Length of the shortest path: {:.3f} (size of the entire map: {} x {})<br>'.format( tour.best_length, img_size[0], img_size[1] )
 			message += 'Total computation time: {}s'.format( time_str )
-			return render_template('index.html', img_file = img_file, img_size = img_size, message = Markup(message) )
+			return render_template('main.html', img_file = img_file, img_size = img_size, message = Markup(message) )
 		elif n < n_min:
-			return render_template('index.html', img_file = background_file, img_size = img_size, message = 'You have not specified enough points!')
+			return render_template('main.html', img_file = background_file, img_size = img_size, message = 'You have not specified enough points!')
 	else:
 		return 'An error has occurred';
 
