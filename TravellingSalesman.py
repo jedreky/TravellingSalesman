@@ -5,14 +5,14 @@ This file contains all the functions and classes used by the TSP bot.
 import datetime
 import io
 import itertools
-import json
+#import json
 import matplotlib.pyplot as plt
 import numpy as np
-import pymongo
+#import pymongo
 import re
-import requests
+#import requests
 import time
-import TwitterAPI
+#import TwitterAPI
 
 #######################################################
 # Global variables

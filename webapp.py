@@ -6,7 +6,6 @@ import sys
 import time
 
 from flask import Flask, Markup, render_template, request
-import PIL
 
 import TravellingSalesman as TS
 
@@ -16,7 +15,8 @@ import TravellingSalesman as TS
 # minimal and maximal number of locations
 n_min = 4
 n_max = 16
-background_file = 'background.jpg'
+background_file = 'background.png'
+img_size = (960, 540)
 #######################################################
 
 def generate_random_string(length):
@@ -27,9 +27,6 @@ app = Flask(__name__)
 
 @app.route( '/', methods=['GET', 'POST'] )
 def main():
-	img = PIL.Image.open('static/' + background_file)
-	img_size = img.size
-
 	if request.method == 'GET':
 		return render_template('main.html', img_file = background_file, img_size = img_size)
 	elif request.method == 'POST':
@@ -49,10 +46,10 @@ def main():
 			tour = TS.Route(dist, 0, 0, locs_to_visit)
 			time_str = TS.get_time_string( time.time() - t0 )
 
-			img_info = { 'file': background_file, 'width': img.size[0], 'height': img.size[1] }
+			img_info = { 'file': background_file, 'width': img_size[0], 'height': img_size[1] }
 			img = TS.plot_path(locs, tour.best_path, False, img_info)
 
-			img_file = 't-' + generate_random_string(12) + '.jpg'
+			img_file = 't-' + generate_random_string(12) + '.png'
 
 			with open('static/' + img_file, 'wb') as f:
 				f.write(img.getbuffer())
@@ -66,5 +63,8 @@ def main():
 		return 'An error has occurred';
 
 if __name__ == '__main__':
+	# only local access
 	host = '127.0.0.1'
-	app.run( host = host, port = 8081, debug = True )
+	# external access allowed
+	host = '0.0.0.0'
+	app.run( host = host, port = 8724, debug = False )
