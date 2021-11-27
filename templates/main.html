@@ -21,7 +21,7 @@
 </head>
 
 <body>
-	<div id = "canvas-container">
+	<div id = 'canvas-container'>
 		<canvas id = 'click-area' width = '{{img_size[0]}}' height = '{{img_size[1]}}'></canvas>
 	</div>
 	<p id = 'info' align = 'center'>
@@ -29,10 +29,12 @@
 	{{message}}
 	{% endif %}
 	</p>
+	<div align = 'center'>
 	<form action = '/' method = 'post' align = 'center'>
 	<input type = 'hidden' name = 'points' id = 'points'>
 	<input type = 'submit' value = "Go, solve, Mandango!">
 	</form>
+	</div>
 	<script src = '{{ url_for( 'static', filename = 'readPos.js' ) }}'></script>
 </body>
 </html>
