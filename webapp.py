@@ -71,7 +71,7 @@ def main():
 		return 'An error has occurred';
 
 if __name__ == '__main__':
-	if external_access == True:
+	if external_access:
 		host = '0.0.0.0'
 	else:
 		host = '127.0.0.1'
