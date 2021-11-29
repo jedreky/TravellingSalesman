@@ -15,8 +15,16 @@ import TravellingSalesman as TS
 # minimal and maximal number of locations
 n_min = 4
 n_max = 16
+# background image
 background_file = 'background.png'
 img_size = (960, 540)
+# template file
+template_file = 'main.html'
+# whether external access should be allowed
+external_access = True
+port = 8724
+# whether to run in debug mode
+debug = False
 #######################################################
 
 def generate_random_string(length):
@@ -28,7 +36,7 @@ app = Flask(__name__)
 @app.route( '/', methods=['GET', 'POST'] )
 def main():
 	if request.method == 'GET':
-		return render_template('main.html', img_file = background_file, img_size = img_size)
+		return render_template(template_file, img_file = background_file, img_size = img_size)
 	elif request.method == 'POST':
 		locs = TS.extract_locations( request.form['points'] )
 		n = len(locs)
@@ -56,15 +64,16 @@ def main():
 
 			message += 'Length of the shortest path: {:.3f} (size of the entire map: {} x {})<br>'.format( tour.best_length, img_size[0], img_size[1] )
 			message += 'Total computation time: {}s'.format( time_str )
-			return render_template('main.html', img_file = img_file, img_size = img_size, message = Markup(message) )
+			return render_template(template_file, img_file = img_file, img_size = img_size, message = Markup(message) )
 		elif n < n_min:
-			return render_template('main.html', img_file = background_file, img_size = img_size, message = 'You have not specified enough points!')
+			return render_template(template_file, img_file = background_file, img_size = img_size, message = 'You have not specified enough points!')
 	else:
 		return 'An error has occurred';
 
 if __name__ == '__main__':
-	# only local access
-	host = '127.0.0.1'
-	# external access allowed
-	host = '0.0.0.0'
-	app.run( host = host, port = 8724, debug = False )
+	if external_access == True:
+		host = '0.0.0.0'
+	else:
+		host = '127.0.0.1'
+
+	app.run( host = host, port = port, debug = debug )
