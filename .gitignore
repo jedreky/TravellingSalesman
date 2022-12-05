@@ -1,3 +1,12 @@
+# My additions: files
+info
+docker-info
+
+# My additions: folders
+.idea/
+keys/
+old/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
