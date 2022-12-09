@@ -8,5 +8,5 @@ RUN pip install -r requirements.txt
 COPY src/solver.py /app/src/
 COPY src/solver_api.py /app/src/
 
-EXPOSE 8118/tcp
+EXPOSE 8080/tcp
 CMD [ "python3", "-m", "src.solver_api" ]

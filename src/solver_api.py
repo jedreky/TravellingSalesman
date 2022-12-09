@@ -16,7 +16,7 @@ def solve():
 
 
 if __name__ == "__main__":
-    port = 8118
+    port = 8080
 
     if "DEBUG_MODE" in os.environ:
         app.run(host="0.0.0.0", port=port, debug=True)
