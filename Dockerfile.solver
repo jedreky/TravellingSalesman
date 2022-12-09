@@ -1,5 +1,8 @@
 FROM python:3.11-slim-buster
 
+ARG SOLVER_PORT
+ENV SOLVER_PORT=$SOLVER_PORT
+
 COPY requirements.solver.txt /app/requirements.txt
 WORKDIR /app
 
@@ -7,6 +10,7 @@ RUN pip install -r requirements.txt
 
 COPY src/solver.py /app/src/
 COPY src/solver_api.py /app/src/
+COPY src/utils.py /app/src/
 
-EXPOSE 8080/tcp
+EXPOSE $SOLVER_PORT/tcp
 CMD [ "python3", "-m", "src.solver_api" ]

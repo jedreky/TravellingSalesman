@@ -1,8 +1,7 @@
 from flask import Flask, request
-import os
-import waitress
 
 from src.solver import TSP
+from src.utils import HOST, SOLVER_PORT, run_app
 
 app = Flask(__name__)
 
@@ -16,9 +15,4 @@ def solve():
 
 
 if __name__ == "__main__":
-    port = 8080
-
-    if "DEBUG_MODE" in os.environ:
-        app.run(host="0.0.0.0", port=port, debug=True)
-    else:
-        waitress.serve(app, host="0.0.0.0", port=port)
+    run_app(app, HOST, SOLVER_PORT)
