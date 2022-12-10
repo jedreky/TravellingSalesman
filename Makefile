@@ -1,7 +1,4 @@
-ifneq (,$(wildcard ./.env))
-	include .env
-	export
-endif
+include config.env
 
 REGISTRY = $(AWS_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
 REPO=tsp
