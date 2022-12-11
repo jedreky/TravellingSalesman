@@ -2,18 +2,20 @@ services:
   solver:
     image: tsp:solver
     ports:
-      - "8118:8118"
-    env_file:
-      - config.env
+      - "${SOLVER_PORT}:${SOLVER_PORT}"
+    environment:
+      SOLVER_PORT: ${SOLVER_PORT}
+      WEBAPP_PORT: ${WEBAPP_PORT}
     networks:
       - tsp
 
   webapp:
     image: tsp:webapp
     ports:
-      - "8338:8338"
-    env_file:
-      - config.env
+      - "${WEBAPP_PORT}:${WEBAPP_PORT}"
+    environment:
+      SOLVER_PORT: ${SOLVER_PORT}
+      WEBAPP_PORT: ${WEBAPP_PORT}
     networks:
       - tsp
 
