@@ -1,11 +1,5 @@
 FROM python:3.11-slim-buster
 
-ARG SOLVER_PORT
-ENV SOLVER_PORT=$SOLVER_PORT
-
-ARG WEBAPP_PORT
-ENV WEBAPP_PORT=$WEBAPP_PORT
-
 COPY requirements.webapp.txt /app/requirements.txt
 WORKDIR /app
 
@@ -18,5 +12,4 @@ COPY src/static/readPos.js /app/src/static/
 COPY src/static/imgs/background.png /app/src/static/imgs/
 COPY src/templates/main.html /app/src/templates/
 
-EXPOSE $WEBAPP_PORT/tcp
 CMD [ "python3", "-m", "src.webapp" ]

@@ -1,4 +1,4 @@
-include config.env
+include aws_config.env
 
 REGISTRY = $(AWS_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
 REPO=tsp
@@ -11,9 +11,7 @@ WEBAPP_IMG_TAG := webapp
 
 .PHONY: build-solver
 build-solver:
-	docker build --build-arg SOLVER_PORT=$(SOLVER_PORT) --build-arg WEBAPP_PORT=$(WEBAPP_PORT) \
-	--tag $(REGISTRY)/$(REPO):$(SOLVER_IMG_TAG) . \
-	--file Dockerfile.solver
+	docker build --tag $(REPO):$(SOLVER_IMG_TAG) . --file Dockerfile.solver
 
 .PHONY: push-solver
 push-solver: build-solver
@@ -23,9 +21,7 @@ push-solver: build-solver
 
 .PHONY: build-webapp
 build-webapp:
-	docker build --build-arg SOLVER_PORT=$(SOLVER_PORT) --build-arg WEBAPP_PORT=$(WEBAPP_PORT) \
-	--tag $(REGISTRY)/$(REPO):$(WEBAPP_IMG_TAG) . \
-	--file Dockerfile.webapp
+	docker build --tag $(REPO):$(WEBAPP_IMG_TAG) . --file Dockerfile.webapp
 
 .PHONY: push-webapp
 push-webapp: build-webapp

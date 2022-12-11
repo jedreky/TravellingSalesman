@@ -1,0 +1,21 @@
+services:
+  solver:
+    image: tsp:solver
+    ports:
+      - "8118:8118"
+    env_file:
+      - config.env
+    networks:
+      - tsp
+
+  webapp:
+    image: tsp:webapp
+    ports:
+      - "8338:8338"
+    env_file:
+      - config.env
+    networks:
+      - tsp
+
+networks:
+  tsp: {}

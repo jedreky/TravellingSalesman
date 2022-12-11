@@ -73,7 +73,7 @@ def plot_path(locs, path, img_info=None):
 
 
 def call_solver(locs):
-    res = requests.post(url=f"http://localhost:{SOLVER_PORT}/solve", json=locs)
+    res = requests.post(url=f"http://solver:{SOLVER_PORT}/solve", json=locs)
     return res.json()
 
 
