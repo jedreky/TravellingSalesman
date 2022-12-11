@@ -1,0 +1,15 @@
+FROM python:3.11-slim-buster
+
+ARG WEBAPP_PORT
+ENV WEBAPP_PORT=$WEBAPP_PORT
+
+COPY requirements.webapp.txt /app/requirements.txt
+WORKDIR /app
+
+RUN pip install -r requirements.txt
+
+COPY src/webapp.py /app/src/
+COPY src/utils.py /app/src/
+
+EXPOSE $WEBAPP_PORT/tcp
+CMD [ "python3", "-m", "src.webapp" ]
