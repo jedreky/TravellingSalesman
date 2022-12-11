@@ -20,7 +20,7 @@ push-solver: build-solver
 .PHONY: build-webapp
 build-webapp:
 	docker build --build-arg SOLVER_PORT=$(SOLVER_PORT) \
-	--tag $(REGISTRY)/$(REPO):$(WEBAPP_IMG_TAG) . \
+	WEBAPP_PORT=$(WEBAPP_PORT) --tag $(REGISTRY)/$(REPO):$(WEBAPP_IMG_TAG) . \
 	--file Dockerfile.solver
 
 .PHONY: push-webapp

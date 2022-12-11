@@ -1,11 +1,16 @@
 import json
-import requests
+import random
+import string
 import time
 
+import matplotlib.pyplot as plt
+import numpy as np
+import requests
 from flask import Flask, Markup, render_template, request
 
-from src.utils import HOST, SOLVER_PORT, WEBAPP_PORT, IMG_FOLDER, run_app, plot_path
+from src.utils import HOST, IMG_FOLDER, SOLVER_PORT, WEBAPP_PORT, run_app
 
+DPI = 100
 
 # minimal and maximal number of locations
 MIN_LOC_NUM = 4
@@ -28,6 +33,43 @@ def get_time_string(time_elapsed):
         return "less than 0.01"
     else:
         return "{:.2f}".format(time_elapsed)
+
+
+def get_valid_filename(folder, length=8):
+    success = False
+
+    while not success:
+        rand_id = "".join(
+            random.choices(string.ascii_lowercase + string.digits, k=length)
+        )
+        filename = folder / f"img-{rand_id}.png"
+        success = not filename.exists()
+
+    return filename
+
+
+def plot_path(locs, path, img_info=None):
+    """Plot a path through locations (to make a closed loop the first and last locations should be the same)."""
+    # convert the path and the locations into numpy arrays
+    path = np.array([locs[j] for j in path])
+    locs_array = np.array(locs)
+
+    fig, ax = plt.subplots(
+        figsize=(img_info["width"] / DPI, img_info["height"] / DPI),
+        tight_layout={"pad": 0},
+    )
+    ax.axis("off")
+    background = plt.imread(img_info["file"])
+    ax.imshow(background)
+
+    ax.plot(path[:, 0], path[:, 1])
+    ax.scatter(locs_array[:, 0], locs_array[:, 1], color="red")
+
+    img_file = get_valid_filename(IMG_FOLDER)
+    fig.savefig(img_file, format="png", dpi=DPI)
+    plt.close(fig)
+
+    return img_file
 
 
 def call_solver(locs):
