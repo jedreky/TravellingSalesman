@@ -3,6 +3,9 @@ FROM python:3.11-slim-buster
 ARG SOLVER_PORT
 ENV SOLVER_PORT=$SOLVER_PORT
 
+ARG WEBAPP_PORT
+ENV WEBAPP_PORT=$WEBAPP_PORT
+
 COPY requirements.solver.txt /app/requirements.txt
 WORKDIR /app
 
