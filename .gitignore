@@ -1,9 +1,10 @@
 # My additions: files
-info
-docker-info
+*-info
+src/static/imgs/img-*
 
 # My additions: folders
 .idea/
+extras/
 keys/
 old/
 
