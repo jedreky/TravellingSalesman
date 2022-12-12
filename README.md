@@ -9,3 +9,17 @@ We have also implemented the possibility to interact with our code via Twitter. 
 A bot is implemented by executing the watch function at regular intervals in an infinite loop. The interval between consecutive executions is stored in an external database and can be modified while the bot is running. Moreover, setting this interval to 0 will cause the bot to terminate. The watch function checks for new Twitter posts, which include the handle @SoftdevBot and tries to extract location data from them. Any string in the body of the post of the form "[x, y]" where x and y can be interpreted as floats is considered a location and our bot expects to find at least 4 locations in a post. The bot then computes the distance matrix, finds the shortest path and plots it. The length of the shortest path and the plot are then posted on Twitter as a reply to the original post.
 
 The bot is currently down, but you can check out its previous interactions at: https://twitter.com/SoftdevBot .
+
+# How to run
+
+If you want to run this locally, you have to pull the containers:
+
+```
+docker pull
+```
+
+Then, use:
+
+```
+docker-compose --env-file config.env up
+```

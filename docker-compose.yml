@@ -2,22 +2,25 @@ services:
   solver:
     image: tsp:solver
     ports:
-      - "${SOLVER_PORT}:${SOLVER_PORT}"
+    - ${SOLVER_PORT}:${SOLVER_PORT}
     environment:
-      SOLVER_PORT: ${SOLVER_PORT}
-      WEBAPP_PORT: ${WEBAPP_PORT}
+    - SOLVER_PORT
+    - WEBAPP_PORT
+    - DEBUG_MODE
     networks:
-      - tsp
+    - tsp
 
   webapp:
     image: tsp:webapp
     ports:
-      - "${WEBAPP_PORT}:${WEBAPP_PORT}"
+    - ${WEBAPP_PORT}:${WEBAPP_PORT}
     environment:
-      SOLVER_PORT: ${SOLVER_PORT}
-      WEBAPP_PORT: ${WEBAPP_PORT}
+    - SOLVER_PORT
+    - WEBAPP_PORT
+    - DEBUG_MODE
+    - AWS_EKS
     networks:
-      - tsp
+    - tsp
 
 networks:
   tsp: {}

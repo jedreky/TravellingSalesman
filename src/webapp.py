@@ -8,7 +8,7 @@ import numpy as np
 import requests
 from flask import Flask, Markup, render_template, request
 
-from src.utils import HOST, IMG_FOLDER, SOLVER_PORT, WEBAPP_PORT, run_app
+from src.utils import HOST, IMG_FOLDER, SOLVER_PORT, WEBAPP_PORT, HISTORY_MODE, run_app
 
 DPI = 100
 
@@ -77,14 +77,33 @@ def call_solver(locs):
     return res.json()
 
 
-def generate_page(img_file, message=""):
+def generate_page(img_file, desc=""):
     img_file_for_html = img_file.relative_to(*img_file.parts[:2])
+
+    if HISTORY_MODE:
+        footer = 'Check out previously generated solutions <a href="/history">here</a>.'
+    else:
+        footer = ""
+
     return render_template(
         TEMPLATE_FILE,
         img_file=img_file_for_html,
         img_size=IMG_SIZE,
-        message=Markup(message),
+        desc=Markup(desc),
+        footer=Markup(footer),
     )
+
+
+@app.route("/history", methods=["GET"])
+@app.route("/history/<problem_id>", methods=["GET"])
+def show_history(problem_id=None):
+    if HISTORY_MODE:
+        if problem_id is None:
+            return "zaba"
+        else:
+            return f"zaba {problem_id}"
+    else:
+        return "History is only available while running on AWS EKS."
 
 
 @app.route("/", methods=["GET", "POST"])
@@ -96,11 +115,11 @@ def main():
         n = len(locs)
 
         if n >= MIN_LOC_NUM:
-            message = ""
+            desc = ""
 
             if n > MAX_LOC_NUM:
                 locs = locs[:MAX_LOC_NUM]
-                message += "You have specified a lot of points, so I have only considered the first {} of them.<br>".format(
+                desc += "You have specified a lot of points, so I have only considered the first {} of them.<br>".format(
                     MAX_LOC_NUM
                 )
 
@@ -115,14 +134,14 @@ def main():
             }
             img_file = plot_path(locs, sol["path"], img_info)
 
-            message += "Length of the shortest path: {:.1f} (size of the entire map: {} x {})<br>".format(
+            desc += "Length of the shortest path: {:.1f} (size of the entire map: {} x {})<br>".format(
                 sol["length"], IMG_SIZE[0], IMG_SIZE[1]
             )
-            message += "Total computation time: {}s".format(time_str)
-            return generate_page(img_file=img_file, message=message)
+            desc += "Total computation time: {}s".format(time_str)
+            return generate_page(img_file=img_file, desc=desc)
         elif n < MIN_LOC_NUM:
             return generate_page(
-                img_file=img_file, message="You have not specified enough points!"
+                img_file=BACKGROUND_FILE, desc="You have not specified enough points!"
             )
     else:
         return "An error has occurred"

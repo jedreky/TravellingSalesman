@@ -15,6 +15,10 @@ assert (
 ), f"Missing environmental variable: {WEBAPP_PORT_ENV_VAR}"
 WEBAPP_PORT = os.environ.get(WEBAPP_PORT_ENV_VAR)
 
+
+AWS_EKS_ENV_VAR = "AWS_EKS"
+HISTORY_MODE = AWS_EKS_ENV_VAR in os.environ and os.environ[AWS_EKS_ENV_VAR] == "1"
+
 HOST = "0.0.0.0"
 
 IMG_FOLDER = Path("src/static/imgs")

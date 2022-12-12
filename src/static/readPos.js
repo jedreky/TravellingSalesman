@@ -1,11 +1,11 @@
 // declare constants
 const R = 3.5;
-const red = '#FF0000';
+const red = "#FF0000";
 
 // intialise an array to store points
 let points = new Array();
 
-document.getElementById('click-area').onclick = function clickEvent(e)
+document.getElementById("click-area").onclick = function clickEvent(e)
 {
     // compute coordinates
     let canvas = e.target;
@@ -16,7 +16,7 @@ document.getElementById('click-area').onclick = function clickEvent(e)
     // draw a circle on the canvas
     if (canvas.getContext)
     {
-        let ctx = canvas.getContext('2d');
+        let ctx = canvas.getContext("2d");
         ctx.beginPath();
         ctx.arc(x, y, R, 0, 2 * Math.PI, false);
         ctx.lineWidth = 3;
@@ -29,7 +29,7 @@ document.getElementById('click-area').onclick = function clickEvent(e)
     // add the coordinates to the list
     x = x.toFixed(3);
     y = y.toFixed(3);
-    points.push( '[' + x + ', ' + y + ']' );
-    document.getElementById('points').value = '[' + points + ']';
-    document.getElementById('info').innerHTML = 'You have selected ' + points.length + ' points.';
+    points.push( "[" + x + ", " + y + "]" );
+    document.getElementById("points").value = "[" + points + "]";
+    document.getElementById("desc").innerHTML = "You have selected " + points.length + " points.";
 }
