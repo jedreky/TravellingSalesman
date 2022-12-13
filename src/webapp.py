@@ -81,7 +81,7 @@ def generate_page(img_file, desc=""):
     img_file_for_html = img_file.relative_to(*img_file.parts[:2])
 
     if HISTORY_MODE:
-        footer = 'Check out previously generated solutions <a href="/history">here</a>.'
+        footer = 'Click <a href="/history">here</a> to check out previously generated solutions.'
     else:
         footer = ""
 
@@ -119,7 +119,7 @@ def main():
 
             if n > MAX_LOC_NUM:
                 locs = locs[:MAX_LOC_NUM]
-                desc += "You have specified a lot of points, so I have only considered the first {} of them.<br>".format(
+                desc += "You have specified a lot of points, so let me just consider the first {} of them.<br>".format(
                     MAX_LOC_NUM
                 )
 
