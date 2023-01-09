@@ -7,6 +7,5 @@ RUN pip install -r requirements.txt
 
 COPY src/solver_core.py /app/src/
 COPY src/solver_endpoint_fastapi.py /app/src/
-COPY src/utils.py /app/src/
 
-CMD uvicorn src.solver_endpoint_fastapi:app --host $HOST --port $SOLVER_PORT
+CMD uvicorn src.solver_endpoint_fastapi:app --host 0.0.0.0 --port $SOLVER_PORT
