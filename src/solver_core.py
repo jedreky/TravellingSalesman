@@ -70,7 +70,7 @@ class TSP:
         dist_matrix = dist_matrix + np.transpose(dist_matrix)
         return dist_matrix
 
-    def solve(self, route=None):
+    def _solve_route(self, route=None):
         # if route is not specified, solve the complete tour
         if route is None:
             route = Route(start=0, end=0, locs_to_visit=tuple(range(1, self.num_locs)))
@@ -92,7 +92,7 @@ class TSP:
                         end=x,
                         locs_to_visit=tuple(y for y in route.locs_to_visit if y != x),
                     )
-                    solution = self.solve(route=subroute)
+                    solution = self._solve_route(route=subroute)
                     possible_routes.append(
                         Solution(
                             solution.path + (route.end,),
@@ -104,3 +104,7 @@ class TSP:
                 self.solved_routes[route] = possible_routes[idx]
 
         return self.solved_routes[route]
+
+    def solve(self):
+        solution = self._solve_route()
+        return solution.to_json()

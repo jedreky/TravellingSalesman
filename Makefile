@@ -9,9 +9,13 @@ SOLVER_IMG_TAG := $(REPO):solver
 WEBAPP_IMG_TAG := $(REPO):webapp
 
 
-.PHONY: build-solver
-build-solver:
-	docker build --tag $(SOLVER_IMG_TAG) . --file Dockerfile.solver
+.PHONY: build-solver_flask
+build-solver_flask:
+	docker build --tag $(SOLVER_IMG_TAG)_flask . --file Dockerfile.solver_flask
+
+.PHONY: build-solver_fastapi
+build-solver_fastapi:
+	docker build --tag $(SOLVER_IMG_TAG)_fastapi . --file Dockerfile.solver_fastapi
 
 .PHONY: push-solver
 push-solver: build-solver
@@ -32,7 +36,7 @@ push-webapp: build-webapp
 	docker push $(REGISTRY)/$(WEBAPP_IMG_TAG)
 
 .PHONY: build
-build: build-solver build-webapp
+build: build-solver_flask build-solver_fastapi build-webapp
 
 .PHONY: push
 push: push-solver push-webapp

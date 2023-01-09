@@ -8,7 +8,7 @@ import numpy as np
 import requests
 from flask import Flask, Markup, render_template, request
 
-from src.utils import (HISTORY_MODE, HOST, IMG_FOLDER, SOLVER_PORT, WEBAPP_PORT, run_app)
+from src.utils import HISTORY_MODE, HOST, IMG_FOLDER, SOLVER_PORT, WEBAPP_PORT, run_app
 
 DPI = 100
 

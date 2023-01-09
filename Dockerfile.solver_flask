@@ -1,0 +1,12 @@
+FROM python:3.11-slim-buster
+
+COPY requirements.solver_flask.txt /app/requirements.txt
+WORKDIR /app
+
+RUN pip install -r requirements.txt
+
+COPY src/solver_core.py /app/src/
+COPY src/solver_endpoint_flask.py /app/src/
+COPY src/utils.py /app/src/
+
+CMD ["python3", "-m", "src.solver_endpoint_flask"]
