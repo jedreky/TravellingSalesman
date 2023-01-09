@@ -17,7 +17,6 @@ services:
     - SOLVER_PORT
     - WEBAPP_PORT
     - DEBUG_MODE
-    - AWS_EKS
     networks:
     - tsp
 
