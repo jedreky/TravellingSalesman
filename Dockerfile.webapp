@@ -5,11 +5,11 @@ WORKDIR /app
 
 RUN pip install -r requirements.txt
 
-COPY src/webapp_flask.py /app/src/
+COPY src/webapp.py /app/src/
 COPY src/utils.py /app/src/
 
 COPY src/static/readPos.js /app/src/static/
 COPY src/static/imgs/background.png /app/src/static/imgs/
 COPY src/templates/main.html /app/src/templates/
 
-CMD [ "python3", "-m", "src.webapp_flask" ]
+CMD [ "python3", "-m", "src.webapp" ]

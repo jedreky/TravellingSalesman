@@ -24,7 +24,7 @@ IMG_SIZE = (960, 540)
 TEMPLATE_FILE = "main.html"
 
 
-assert WEBAPP_PORT is not None, "webapp port not set"
+assert WEBAPP_PORT is not None, "Error: webapp port not set"
 
 
 app = Flask(__name__)
