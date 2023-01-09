@@ -5,7 +5,6 @@ services:
     - ${SOLVER_PORT}:${SOLVER_PORT}
     environment:
     - SOLVER_PORT
-    - WEBAPP_PORT
     - DEBUG_MODE
     networks:
     - tsp

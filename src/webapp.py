@@ -8,7 +8,7 @@ import numpy as np
 import requests
 from flask import Flask, Markup, render_template, request
 
-from src.utils import HOST, IMG_FOLDER, SOLVER_PORT, WEBAPP_PORT, HISTORY_MODE, run_app
+from src.utils import (HISTORY_MODE, HOST, IMG_FOLDER, SOLVER_PORT, WEBAPP_PORT, run_app)
 
 DPI = 100
 
@@ -22,6 +22,9 @@ IMG_SIZE = (960, 540)
 
 # template file
 TEMPLATE_FILE = "main.html"
+
+
+assert WEBAPP_PORT is not None, "webapp port not set"
 
 
 app = Flask(__name__)

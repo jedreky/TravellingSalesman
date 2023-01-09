@@ -3,18 +3,10 @@ from pathlib import Path
 
 import waitress
 
-SOLVER_PORT_ENV_VAR = "SOLVER_PORT"
-assert (
-    SOLVER_PORT_ENV_VAR in os.environ
-), f"Missing environmental variable: {SOLVER_PORT_ENV_VAR}"
-SOLVER_PORT = os.environ.get(SOLVER_PORT_ENV_VAR)
+SOLVER_PORT = os.environ.get("SOLVER_PORT", None)
+WEBAPP_PORT = os.environ.get("WEBAPP_PORT", None)
 
-WEBAPP_PORT_ENV_VAR = "WEBAPP_PORT"
-assert (
-    WEBAPP_PORT_ENV_VAR in os.environ
-), f"Missing environmental variable: {WEBAPP_PORT_ENV_VAR}"
-WEBAPP_PORT = os.environ.get(WEBAPP_PORT_ENV_VAR)
-
+assert SOLVER_PORT is not None, "solver port not set"
 
 AWS_EKS_ENV_VAR = "AWS_EKS"
 HISTORY_MODE = AWS_EKS_ENV_VAR in os.environ and os.environ[AWS_EKS_ENV_VAR] == "1"
