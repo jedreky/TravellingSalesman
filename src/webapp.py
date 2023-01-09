@@ -8,7 +8,7 @@ import numpy as np
 import requests
 from flask import Flask, Markup, render_template, request
 
-from src.utils import HISTORY_MODE, HOST, IMG_FOLDER, SOLVER_PORT, WEBAPP_PORT, run_app
+from src.utils import HISTORY_MODE, IMG_FOLDER, SOLVER_PORT, WEBAPP_PORT, run_app
 
 DPI = 100
 
@@ -76,7 +76,7 @@ def plot_path(locs, path, img_info=None):
 
 
 def call_solver(locs):
-    res = requests.post(url=f"http://solver:{SOLVER_PORT}/solve", json=locs)
+    res = requests.post(url=f"http://solver:{SOLVER_PORT}/solve", json={"coords": locs})
     return res.json()
 
 
@@ -151,4 +151,4 @@ def main():
 
 
 if __name__ == "__main__":
-    run_app(app, HOST, WEBAPP_PORT)
+    run_app(app, WEBAPP_PORT)

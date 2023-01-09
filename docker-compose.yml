@@ -1,6 +1,6 @@
 services:
   solver:
-    image: tsp:solver_flask
+    image: tsp:solver_${FRAMEWORK}
     ports:
     - ${SOLVER_PORT}:${SOLVER_PORT}
     environment:

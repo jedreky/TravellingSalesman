@@ -8,9 +8,6 @@ WEBAPP_PORT = os.environ.get("WEBAPP_PORT", None)
 
 assert SOLVER_PORT is not None, "Error: solver port not set"
 
-AWS_EKS_ENV_VAR = "AWS_EKS"
-HISTORY_MODE = AWS_EKS_ENV_VAR in os.environ and os.environ[AWS_EKS_ENV_VAR] == "1"
-
 
 IMG_FOLDER = Path("src/static/imgs")
 

@@ -21,9 +21,11 @@ docker pull
 Then, use:
 
 ```
-docker-compose --env-file config.env up
+FRAMEWORK=flask docker-compose --env-file config.env up
 ```
 
-# To run on AWS EKS
+or
 
-To be announced...
+```
+FRAMEWORK=fastapi docker-compose --env-file config.env up
+```
