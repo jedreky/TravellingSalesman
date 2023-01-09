@@ -3,7 +3,7 @@ import pytest
 
 from numpy.testing import assert_almost_equal
 
-from src.solver import TSP
+from src.solver_core import TSP
 
 
 @pytest.mark.parametrize(
@@ -21,5 +21,5 @@ from src.solver import TSP
 )
 def test_TSP_solver_from_coords(coords, expected_length):
     problem = TSP(coords=coords)
-    solution = problem.solve()
+    solution = problem._solve_route()
     assert_almost_equal(solution.length, expected_length)
