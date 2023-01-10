@@ -8,7 +8,7 @@ import numpy as np
 import requests
 from flask import Flask, Markup, render_template, request
 
-from src.utils import HISTORY_MODE, IMG_FOLDER, SOLVER_PORT, WEBAPP_PORT, run_app
+from src.utils import GITHUB_URL, IMG_FOLDER, SOLVER_PORT, WEBAPP_PORT, run_app
 
 DPI = 100
 
@@ -83,10 +83,12 @@ def call_solver(locs):
 def generate_page(img_file, desc=""):
     img_file_for_html = img_file.relative_to(*img_file.parts[:2])
 
-    if HISTORY_MODE:
-        footer = 'Click <a href="/history">here</a> to check out previously generated solutions.'
-    else:
-        footer = ""
+    footer = f'Check out the source code at <a href="{GITHUB_URL}">GitHub</a>!'
+
+    framework = os.environ.get("FRAMEWORK", None)
+
+    if framework is not None:
+        footer += f"Using {framework} endpoint"
 
     return render_template(
         TEMPLATE_FILE,
@@ -95,18 +97,6 @@ def generate_page(img_file, desc=""):
         desc=Markup(desc),
         footer=Markup(footer),
     )
-
-
-@app.route("/history", methods=["GET"])
-@app.route("/history/<problem_id>", methods=["GET"])
-def show_history(problem_id=None):
-    if HISTORY_MODE:
-        if problem_id is None:
-            return "zaba"
-        else:
-            return f"zaba {problem_id}"
-    else:
-        return "History is only available while running on AWS EKS."
 
 
 @app.route("/", methods=["GET", "POST"])

@@ -3,7 +3,7 @@ FROM python:3.11-slim-buster
 COPY requirements.webapp.txt /app/requirements.txt
 WORKDIR /app
 
-RUN pip install -r requirements.txt
+RUN pip install --root-user-action=ignore -r requirements.txt
 
 COPY src/webapp.py /app/src/
 COPY src/utils.py /app/src/

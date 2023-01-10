@@ -8,7 +8,7 @@ WEBAPP_PORT = os.environ.get("WEBAPP_PORT", None)
 
 assert SOLVER_PORT is not None, "Error: solver port not set"
 
-
+GITHUB_URL = "https://github.com/jedreky/TravellingSalesman"
 IMG_FOLDER = Path("src/static/imgs")
 
 
