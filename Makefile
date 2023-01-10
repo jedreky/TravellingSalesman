@@ -2,8 +2,6 @@ include aws_config.env
 
 REGISTRY = $(AWS_ID).dkr.ecr.$(AWS_REGION).amazonaws.com
 REPO=tsp
-#SOLVER_IMG_TAG := $(REPO):solver.$(shell git rev-parse --short HEAD)
-#WEBAPP_IMG_TAG := $(REPO):webapp.$(shell git rev-parse --short HEAD)
 
 SOLVER_IMG_TAG := $(REPO):solver
 WEBAPP_IMG_TAG := $(REPO):webapp
