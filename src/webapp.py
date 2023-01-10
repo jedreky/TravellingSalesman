@@ -85,11 +85,6 @@ def generate_page(img_file, desc=""):
 
     footer = f'Check out the source code at <a href="{GITHUB_URL}">GitHub</a>!'
 
-    framework = os.environ.get("FRAMEWORK", None)
-
-    if framework is not None:
-        footer += f"Using {framework} endpoint"
-
     return render_template(
         TEMPLATE_FILE,
         img_file=img_file_for_html,

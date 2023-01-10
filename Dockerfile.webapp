@@ -12,4 +12,4 @@ COPY src/static/readPos.js /app/src/static/
 COPY src/static/imgs/background.png /app/src/static/imgs/
 COPY src/templates/main.html /app/src/templates/
 
-CMD [ "python3", "-m", "src.webapp" ]
+CMD ["python3", "-m", "src.webapp"]
