@@ -83,7 +83,7 @@ def call_solver(locs):
 def generate_page(img_file, desc=""):
     img_file_for_html = img_file.relative_to(*img_file.parts[:2])
 
-    footer = f'Check out the source code at <a href="{GITHUB_URL}">GitHub</a>!'
+    footer = f'Check out the source code on <a href="{GITHUB_URL}">GitHub</a>!'
 
     return render_template(
         TEMPLATE_FILE,
