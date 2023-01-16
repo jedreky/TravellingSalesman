@@ -10,22 +10,21 @@ build-solver_flask:
 build-solver_fastapi:
 	docker build --tag $(SOLVER_FASTAPI_IMG_TAG) . --file Dockerfile.solver_fastapi
 
+.PHONY: build-webapp
+build-webapp:
+	docker build --tag $(WEBAPP_IMG_TAG) . --file Dockerfile.webapp
+
+.PHONY: build
+build: build-solver_flask build-solver_fastapi build-webapp
+
 .PHONY: push-solvers
 push-solvers: build-solver_flask build-solver_fastapi
 	docker push $(SOLVER_FLASK_IMG_TAG)
 	docker push $(SOLVER_FASTAPI_IMG_TAG)
 
-.PHONY: build-webapp
-build-webapp:
-	docker build --tag $(WEBAPP_IMG_TAG) . --file Dockerfile.webapp
-
 .PHONY: push-webapp
 push-webapp: build-webapp
 	docker push $(WEBAPP_IMG_TAG)
-
-
-.PHONY: build
-build: build-solver_flask build-solver_fastapi build-webapp
 
 .PHONY: push
 push: push-solvers push-webapp
