@@ -12,13 +12,22 @@ The bot is currently down, but you can check out its previous interactions at: h
 
 # To run locally
 
-If you want to run this locally, you have to pull the containers:
+To build containers run:
 
 ```
-docker pull
+git checkout git@github.com:jedreky/TravellingSalesman.git
+make build
 ```
 
-Then, use:
+Alternatively, you can pull the containers from Dockerhub:
+
+```
+docker pull jedreky/tsp:solver_flask
+docker pull jedreky/tsp:solver_fastapi
+docker pull jedreky/tsp:webapp
+```
+
+Then, use, e.g.
 
 ```
 FRAMEWORK=flask docker-compose --env-file config.env up

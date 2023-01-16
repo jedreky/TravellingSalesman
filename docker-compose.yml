@@ -1,6 +1,6 @@
 services:
   solver:
-    image: tsp:solver_${FRAMEWORK}
+    image: ${SOLVER_FASTAPI_IMG_TAG}
     ports:
     - ${SOLVER_PORT}:${SOLVER_PORT}
     environment:
@@ -10,7 +10,7 @@ services:
     - tsp
 
   webapp:
-    image: tsp:webapp
+    image: ${WEBAPP_IMG_TAG}
     ports:
     - ${WEBAPP_PORT}:${WEBAPP_PORT}
     environment:
