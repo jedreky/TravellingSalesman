@@ -1,0 +1,11 @@
+FROM python:3.11-slim-buster
+
+COPY requirements.solver_fastapi.txt /app/requirements.txt
+WORKDIR /app
+
+RUN pip install --root-user-action=ignore -r requirements.txt
+
+COPY src/solver_core.py /app/src/
+COPY src/solver_endpoint_fastapi.py /app/src/
+
+CMD uvicorn src.solver_endpoint_fastapi:app --host 0.0.0.0 --port $SOLVER_PORT

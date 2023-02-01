@@ -1,0 +1,50 @@
+<html>
+
+<head>
+    <style>
+    #canvas-container
+    {
+        margin-bottom: 25px;
+        margin-top: 100px;
+        text-align:center ;
+    }
+
+    #click-area
+    {
+        border: 2px solid black;
+        cursor: pointer;
+        background-image: url("{{url_for("static", filename=img_file)}}");
+        background-repeat: no-repeat;
+        background-size: contain;
+    }
+    </style>
+</head>
+
+<body>
+
+    <div id="canvas-container">
+        <canvas id="click-area" width="{{img_size[0]}}" height="{{img_size[1]}}"></canvas>
+    </div>
+
+    <p id="desc" align="center">
+        {% if desc %}
+        {{desc}}
+        {% endif %}
+    </p>
+
+    <div align="center">
+        <form action="/" method="post">
+            <input type="hidden" name="points" id="points">
+            <input type="submit" value="Solve!">
+        </form>
+    </div>
+
+    <p id="footer" align="center">
+        {% if footer %}
+        {{footer}}
+        {% endif %}
+    </p>
+    <script src="{{url_for("static", filename="readPos.js")}}"></script>
+
+</body>
+</html>

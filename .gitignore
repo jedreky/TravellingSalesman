@@ -1,3 +1,13 @@
+# My additions: files
+*-info
+src/static/imgs/img-*
+
+# My additions: folders
+.idea/
+extras/
+keys/
+old/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

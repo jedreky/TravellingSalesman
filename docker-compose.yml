@@ -1,0 +1,24 @@
+services:
+  solver:
+    image: ${SOLVER_FASTAPI_IMG_TAG}
+    ports:
+    - ${SOLVER_PORT}:${SOLVER_PORT}
+    environment:
+    - SOLVER_PORT
+    - DEBUG_MODE
+    networks:
+    - tsp
+
+  webapp:
+    image: ${WEBAPP_IMG_TAG}
+    ports:
+    - ${WEBAPP_PORT}:${WEBAPP_PORT}
+    environment:
+    - SOLVER_PORT
+    - WEBAPP_PORT
+    - DEBUG_MODE
+    networks:
+    - tsp
+
+networks:
+  tsp: {}
